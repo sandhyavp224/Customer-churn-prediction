@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Customer Churn Prediction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
+</head>
+
+<body>
+
+    <div class="header">
+    <h1>Customer Churn Prediction</h1>
+    <p>AI-powered customer churn risk analysis and retention recommendations</p>
+    </div>
+
+    <form>
+    <label>Gender:</label>
+    <select id="gender">
+        <option>Female</option>
+        <option>Male</option>
+    </select>
+
+    <br><br>
+
+    <label>Senior Citizen:</label>
+    <select id="SeniorCitizen">
+        <option value="0">No</option>
+        <option value="1">Yes</option>
+    </select>
+
+    <br><br>
+
+    <label>Partner:</label>
+    <select id="Partner">
+        <option>Yes</option>
+        <option>No</option>
+    </select>
+
+    <br><br>
+
+    <label>Dependents:</label>
+    <select id="Dependents">
+        <option>Yes</option>
+        <option>No</option>
+    </select>
+
+    <br><br>
+
+    <label>Tenure (months):</label>
+    <input type="number" id="tenure">
+
+    <br><br>
+
+    <label>Phone Service:</label>
+    <select id="PhoneService">
+        <option>Yes</option>
+        <option>No</option>
+    </select>
+
+    <br><br>
+
+    <label>Multiple Lines:</label>
+    <select id="MultipleLines">
+        <option>Yes</option>
+        <option>No</option>
+        <option>No phone service</option>
+    </select>
+
+    <br><br>
+
+    <label>Internet Service:</label>
+    <select id="InternetService">
+        <option>DSL</option>
+        <option>Fiber optic</option>
+        <option>No</option>
+    </select>
+
+    <br><br>
+
+    <label>Online Security:</label>
+    <select id="OnlineSecurity">
+        <option>Yes</option>
+        <option>No</option>
+        <option>No internet service</option>
+    </select>
+
+    <br><br>
+
+    <label>Online Backup:</label>
+    <select id="OnlineBackup">
+        <option>Yes</option>
+        <option>No</option>
+        <option>No internet service</option>
+    </select>
+
+    <br><br>
+
+    <label>Device Protection:</label>
+    <select id="DeviceProtection">
+        <option>Yes</option>
+        <option>No</option>
+        <option>No internet service</option>
+    </select>
+
+    <br><br>
+
+    <label>Tech Support:</label>
+    <select id="TechSupport">
+        <option>Yes</option>
+        <option>No</option>
+        <option>No internet service</option>
+    </select>
+
+    <br><br>
+
+    <label>Streaming TV:</label>
+    <select id="StreamingTV">
+        <option>Yes</option>
+        <option>No</option>
+        <option>No internet service</option>
+    </select>
+
+    <br><br>
+
+    <label>Streaming Movies:</label>
+    <select id="StreamingMovies">
+        <option>Yes</option>
+        <option>No</option>
+        <option>No internet service</option>
+    </select>
+
+    <br><br>
+
+    <label>Contract:</label>
+    <select id="Contract">
+        <option>Month-to-month</option>
+        <option>One year</option>
+        <option>Two year</option>
+    </select>
+
+    <br><br>
+
+    <label>Paperless Billing:</label>
+    <select id="PaperlessBilling">
+        <option>Yes</option>
+        <option>No</option>
+    </select>
+
+    <br><br>
+
+    <label>Payment Method:</label>
+    <select id="PaymentMethod">
+        <option>Electronic check</option>
+        <option>Mailed check</option>
+        <option>Bank transfer (automatic)</option>
+        <option>Credit card (automatic)</option>
+    </select>
+
+    <br><br>
+
+    <label>Monthly Charges:</label>
+    <input type="number" id="MonthlyCharges" step="0.01">
+
+    <br><br>
+
+    <label>Total Charges:</label>
+    <input type="number" id="TotalCharges" step="0.01">
+
+    <br><br>
+
+    <button onclick="predictChurn()">Predict Churn</button>
+
+    <div id="result" class="result-card"></div>
+
+    
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+<footer>
+    <p>Customer Churn Prediction • AI & Data Science Project</p>
+</footer>
+</html>

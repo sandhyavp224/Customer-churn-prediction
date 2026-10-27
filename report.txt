@@ -1,0 +1,450 @@
+CUSTOMER CHURN PREDICTION — PROJECT REPORT
+============================================
+
+1. PROJECT OVERVIEW
+-------------------
+This project predicts whether a telecommunications customer is likely to leave
+(churn) based on customer account, service, contract, and billing information.
+
+The project includes:
+- Exploratory Data Analysis (EDA)
+- Data cleaning and preprocessing
+- Model training and evaluation
+- Churn probability estimation and risk categorization
+- Feature/coefficient interpretation
+- A Flask backend that serves predictions to a web frontend
+
+Important: model predictions are estimates, not guarantees about a customer's
+future behavior. Any retention recommendations are rule-based suggestions and
+should not be treated as proven causes of churn.
+
+
+2. EXPLORATORY DATA ANALYSIS (EDA)
+---------------------------------
+EDA means Exploratory Data Analysis. It helps us understand the dataset before
+training a model.
+
+Useful checks:
+- df.shape: number of rows and columns
+- df.dtypes: data type of each column
+- df.isnull().sum(): missing values per column
+- df.describe(): statistical summary of numeric columns
+- df.describe(include="all"): summary including categorical columns
+- df.duplicated().sum(): number of duplicate rows
+- df.nunique(): number of distinct values in each column
+
+Why these checks matter:
+- Missing values may need to be handled before model training.
+- Duplicate rows can distort the data and potentially bias the model.
+- Unique-value counts help identify categorical features and columns that may
+  behave like identifiers. An ID column should not automatically be removed
+  only because it has many unique values; consider whether it contains useful
+  predictive information.
+
+
+3. DATA CLEANING
+----------------
+The Telco Customer Churn dataset contains customer, service, contract, and
+billing information. The target column is Churn:
+- No  = customer did not churn
+- Yes = customer churned
+
+Typical cleaning steps:
+- Check for missing values with isnull() or isna().
+- Check for duplicate rows with duplicated().
+- Remove columns that are not useful for the modeling task, when justified.
+- Convert TotalCharges to a numeric type because it may initially be stored as
+  text and can contain blank strings.
+
+Example:
+    df["TotalCharges"] = pd.to_numeric(
+        df["TotalCharges"].replace(" ", np.nan),
+        errors="coerce"
+    )
+    df = df.dropna(subset=["TotalCharges"])
+    df["TotalCharges"] = df["TotalCharges"].astype(float)
+
+Explanation:
+- A blank string (" ") is text, not a numeric value.
+- np.nan represents a missing numeric value.
+- pd.to_numeric(..., errors="coerce") converts valid values to numbers and
+  converts unparseable values to NaN.
+- dropna(subset=["TotalCharges"]) removes rows missing TotalCharges.
+- astype(float) converts the column to floating-point values; it is often
+  unnecessary after successful pd.to_numeric conversion, but is valid.
+
+The original workflow removed rows with missing TotalCharges. In a different
+project, imputation could be considered instead, depending on the data and
+modeling requirements.
+
+
+4. PREPROCESSING AND FEATURE ENCODING
+-------------------------------------
+The customerID column is an identifier rather than a normal service or billing
+feature, so it was dropped for this model.
+
+Example:
+    X = df.drop(columns=["customerID", "Churn"])
+    y = df["Churn"]
+
+Axis reminder:
+- axis=0 refers to rows.
+- axis=1 refers to columns.
+
+Machine-learning models generally need numeric feature values. Categorical
+columns can be converted into indicator columns using one-hot encoding.
+
+Example:
+    pd.get_dummies(X, drop_first=True)
+
+With drop_first=True, pandas drops the first category for each encoded
+categorical feature. This can reduce redundant columns for models such as
+linear/logistic regression. It is not a requirement for every model.
+
+In this project, the original feature set had 19 columns before encoding and
+the one-hot-encoded feature set had 30 columns. The number of columns increases
+because categorical columns can produce several indicator columns. The exact
+number depends on the dataset and encoding choices.
+
+Example concept:
+    Contract_Month-to-month = 1 if the contract is month-to-month, otherwise 0
+    Contract_One year        = 1 if the contract is one year, otherwise 0
+    Contract_Two year        = 1 if the contract is two years, otherwise 0
+
+The actual columns produced depend on the encoding method and whether the first
+category is dropped.
+
+
+5. TRAINING AND TESTING
+-----------------------
+The dataset is divided into:
+- Training set: used to fit the model.
+- Testing set: held back to evaluate how well the model performs on unseen data.
+
+The project's split was:
+    train_test_split(
+        X, y,
+        test_size=0.2,
+        random_state=42,
+        stratify=y
+    )
+
+This creates approximately:
+- 80% training data
+- 20% testing data
+
+stratify=y keeps the churn/non-churn proportions approximately similar in both
+sets. random_state=42 makes the split reproducible when the data and code are
+unchanged.
+
+A scaler transforms numeric features to a comparable scale. Scaling can help
+some algorithms, including Logistic Regression, train more effectively.
+Scaling is not always necessary for every algorithm; for example, tree-based
+models typically do not require feature scaling.
+
+Important: preprocessing steps such as scaling and encoding should be fitted
+using the training data only. A scikit-learn Pipeline or ColumnTransformer can
+help avoid data leakage by applying the same fitted transformations to the
+test data and future customer inputs.
+
+
+6. LOGISTIC REGRESSION
+----------------------
+Logistic Regression is a classification algorithm often used to estimate the
+probability of a binary outcome. Here the outcome is whether a customer churns.
+
+Typical workflow:
+1. Create the model.
+2. Fit it using X_train and y_train.
+3. Predict labels for X_test.
+4. Compare y_pred with y_test using evaluation metrics.
+
+Terminology:
+- X_train: training features.
+- y_train: actual training labels.
+- X_test: testing features.
+- y_test: actual testing labels.
+- y_pred: labels predicted by the model.
+
+fit() learns from the training data only; the test data is used for evaluation.
+
+If the target is encoded as:
+    No  -> 0 (stayed)
+    Yes -> 1 (churned)
+
+then a default classification threshold of 0.5 commonly means:
+- predicted churn probability below 0.5: predict class 0
+- predicted churn probability at or above 0.5: predict class 1
+
+This is a default decision threshold, not a universal rule. The threshold can
+be changed depending on the business cost of missed churners versus false
+alarms.
+
+The project reported the following Logistic Regression results:
+- Accuracy: 0.800284 (about 80.03%)
+- F1-score: 0.602546
+- Confusion matrix, with rows = actual class and columns = predicted class:
+
+                     Predicted
+                     Stay (0)  Churn (1)
+    Actual Stay (0)      913       120
+    Actual Churn (1)     161       213
+
+Interpretation:
+- True Negative (TN) = 913: correctly predicted stayers.
+- False Positive (FP) = 120: predicted churn, but the customer stayed.
+- False Negative (FN) = 161: predicted stay, but the customer churned.
+- True Positive (TP) = 213: correctly identified churners.
+
+Why accuracy is not enough:
+Accuracy reports the proportion of all predictions that are correct. Precision,
+recall, and F1-score help evaluate performance specifically for the churn class.
+
+- Precision = TP / (TP + FP)
+  Of customers predicted to churn, how many actually churned?
+- Recall = TP / (TP + FN)
+  Of all customers who actually churned, how many did the model identify?
+- F1-score = harmonic mean of precision and recall.
+
+For churn prediction, recall matters when missing a customer who is about to
+leave is costly. Precision matters when retention actions are expensive and
+false alarms should be limited. The preferred balance depends on the business.
+
+
+7. RANDOM FOREST COMPARISON
+---------------------------
+A Random Forest combines predictions from many decision trees. Each tree learns
+patterns from the training data, and the forest combines their predictions.
+
+The project reported this Random Forest confusion matrix:
+
+                     Predicted
+                     Stay (0)  Churn (1)
+    Actual Stay (0)      917       116
+    Actual Churn (1)     180       194
+
+Interpretation:
+- TN = 917
+- FP = 116
+- FN = 180
+- TP = 194
+
+On this test set:
+- Logistic Regression correctly identified 213 actual churners.
+- Random Forest correctly identified 194 actual churners.
+
+This comparison uses the same test labels, so it shows that Logistic Regression
+identified more churners in these reported results. It does not by itself prove
+that Logistic Regression is better for every purpose; accuracy, precision,
+recall, F1-score, business costs, and validation results should also be compared.
+
+random_state is used to make randomized steps more reproducible, provided the
+data, software, and other settings remain unchanged.
+
+
+8. CHURN PROBABILITIES AND RISK LEVELS
+--------------------------------------
+A classifier can provide class probabilities as well as predicted labels.
+
+Example output:
+
+    Customer       Stay probability       Churn probability
+    Customer 1          0.9730                 0.0270
+    Customer 2          0.3907                 0.6093
+    Customer 3          0.9934                 0.0066
+    Customer 4          0.8135                 0.1865
+    Customer 5          0.8268                 0.1732
+
+For a binary classifier, predict_proba() returns one probability per class.
+If class 1 represents churn, then:
+    churn_probability = probabilities[:, 1]
+
+Here:
+- : means select every row.
+- 1 means select the probability column for class 1 (churn), assuming the
+  model's class ordering is [0, 1].
+
+The Flask app uses these risk bands:
+- Below 30%: Low risk
+- 30% to below 60%: Medium risk
+- 60% and above: High risk
+
+Risk bands are application rules chosen for this project; they are not
+universal statistical standards. A probability is an estimate, and it should
+not be interpreted as certainty.
+
+
+9. INTERPRETING FEATURES AND CONTRIBUTIONS
+------------------------------------------
+The project investigates which features are associated with higher or lower
+predicted churn.
+
+For a Logistic Regression model:
+- A positive coefficient generally increases the log-odds of churn.
+- A negative coefficient generally decreases the log-odds of churn.
+- Interpretation depends on feature encoding and the values of other features.
+
+Examples from the project notes:
+- Month-to-month contract and low tenure were associated with higher churn.
+- A negative coefficient for TechSupport_Yes would indicate lower predicted
+  churn odds when that indicator is 1, all else equal.
+- A positive coefficient for Fiber optic would indicate higher predicted
+  churn odds when that indicator is 1, all else equal.
+
+These are associations learned from the model, not proof that a feature causes
+churn. Coefficients also do not automatically explain a particular customer's
+prediction. A customer-level explanation requires evaluating that customer's
+preprocessed feature values and their contributions to the model output.
+
+Conceptual flow:
+    Customer features
+          |
+          v
+    Preprocessing
+          |
+          v
+    Encoded/scaled feature values
+          |
+          v
+    Model coefficients and feature values
+          |
+          v
+    Contributions to the model score
+          |
+          v
+    Predicted churn probability
+
+The web app also provides rule-based retention recommendations using conditions
+such as contract type, tenure, payment method, and risk level. These suggestions
+are application rules, not necessarily explanations of the model's internal
+reasoning.
+
+
+10. FLASK BACKEND AND LOCAL SERVER
+----------------------------------
+Flask is a Python web framework used to create a local web server and API.
+
+The development app is available at:
+    http://127.0.0.1:5000/
+
+URL parts:
+- 127.0.0.1 is the loopback address, which refers to the same computer.
+- localhost is a hostname commonly used for the same local computer.
+- 5000 is Flask's default development port unless configured otherwise.
+- The slash at the end is the root route.
+
+A server bound only to 127.0.0.1 is normally accessible from the same computer,
+not from other computers on the network. Flask's built-in development server
+is for development and should not be used as a production deployment server.
+
+The basic flow is:
+    Browser
+       |
+       v
+    http://127.0.0.1:5000/
+       |
+       v
+    Flask application
+       |
+       v
+    HTML frontend / API response
+
+
+11. LOADING THE TRAINED MODEL WITH JOBLIB
+-----------------------------------------
+The project saves a trained scikit-learn pipeline in:
+    churn_pipeline.pkl
+
+The Flask app loads it with:
+    pipeline = joblib.load("churn_pipeline.pkl")
+
+This restores the saved Python object into memory so the application can use it
+for predictions. The saved pipeline can include preprocessing and the model.
+
+The model file should be loaded from the correct project path. Only load trusted
+pickle/joblib files: loading an untrusted file can execute unsafe code. The
+training and serving environments should use compatible library versions.
+
+
+12. RECEIVING JSON AND MAKING A PREDICTION
+------------------------------------------
+The frontend sends customer details to the Flask API as JSON.
+
+Typical flow:
+    JSON request from frontend
+             |
+             v
+       Python dictionary
+             |
+             v
+    pd.DataFrame([data])
+             |
+             v
+       Customer DataFrame
+             |
+             v
+       pipeline.predict()
+             |
+             v
+       Prediction returned to frontend
+
+Example:
+    customer = pd.DataFrame([data])
+    prediction = pipeline.predict(customer)
+
+pd.DataFrame([data]) wraps the dictionary in a list so pandas creates a
+one-row DataFrame. The trained pipeline expects the feature columns and data
+types it was trained with. The API should validate inputs and ensure that
+required columns are present and correctly formatted.
+
+The app may also call predict_proba() to obtain churn probability, assign a
+risk band, and return rule-based recommendations in its JSON response.
+
+
+13. END-TO-END PROJECT FLOW
+---------------------------
+    Telco customer dataset
+             |
+             v
+    EDA and data cleaning
+             |
+             v
+    Feature preprocessing / encoding
+             |
+             v
+    Train-test split
+             |
+             v
+    Train Logistic Regression and Random Forest
+             |
+             v
+    Evaluate metrics and confusion matrices
+             |
+             v
+    Save fitted pipeline with Joblib
+             |
+             v
+    Flask loads churn_pipeline.pkl
+             |
+             v
+    Frontend sends customer data as JSON
+             |
+             v
+    Flask converts input to a DataFrame
+             |
+             v
+    Pipeline predicts churn probability
+             |
+             v
+    App returns prediction, risk level, and suggestions
+
+
+14. SUMMARY
+-----------
+This project demonstrates an end-to-end machine-learning workflow: data
+exploration, cleaning, preprocessing, classification, evaluation, probability
+estimation, model persistence, and integration with a Flask web application.
+
+The model helps prioritize customers who may be at risk of leaving. Predictions
+should be evaluated with appropriate metrics and monitored over time. Any
+retention action should be validated against business goals and customer needs.

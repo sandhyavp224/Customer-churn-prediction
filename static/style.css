@@ -1,0 +1,136 @@
+
+    .result-card {
+        margin-top: 25px;
+        padding: 20px;
+        width: 100%;
+        max-width: 450px;
+        box-sizing: border-box;
+        border-radius: 12px;
+        border: 1px solid #ddd;
+        background-color: #f8f9fa;
+        font-family: Arial, sans-serif;
+        line-height: 1.8;
+    }
+    .risk-text {
+    font-weight: bold;
+}
+
+.result-card.low .risk-text {
+    color: green;
+}
+
+.result-card.medium .risk-text {
+    color: orange;
+}
+
+.result-card.high .risk-text {
+    color: red;
+}
+.result-card h2 {
+    margin-top: 0;
+    margin-bottom: 12px;
+}
+
+.result-card ul {
+    padding-left: 20px;
+}
+
+.result-card li {
+    margin-bottom: 8px;
+}
+.probability-bar {
+    width: 100%;
+    height: 12px;
+    background-color: #e5e7eb;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 8px;
+}
+
+.probability-fill {
+    height: 100%;
+    width: 0%;
+    background-color: #ef4444;
+    border-radius: 6px;
+}
+.header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.header h1 {
+    margin-bottom: 8px;
+}
+
+.header p {
+    color: #666;
+    font-size: 16px;
+}
+form {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+form label {
+    display: block;
+    margin-top: 12px;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+form input,
+form select {
+    width: 100%;
+    padding: 9px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+button {
+    display: block;
+    width: 100%;
+    margin-top: 20px;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    background-color: #222;
+color: white;
+}
+button:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+footer {
+    text-align: center;
+    margin-top: 30px;
+    padding: 15px;
+    color: #777;
+    font-size: 14px;
+}
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f5f7fa;
+    margin: 0;
+    padding: 30px;
+}
+form {
+    background-color: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+form label {
+    margin-top: 16px;
+}
+form input,
+form select {
+    margin-bottom: 8px;
+}
+form input:focus,
+form select:focus {
+    outline: none;
+    border-color: #666;
+}
